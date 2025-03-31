@@ -1,0 +1,13 @@
+.layoutWrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+.layoutContent {
+    max-width: 1400px;
+    width: 100%;
+    padding: 32px;
+    gap: 16px;
+}
