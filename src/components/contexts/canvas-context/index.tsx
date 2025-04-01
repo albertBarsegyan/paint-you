@@ -9,7 +9,8 @@ interface DrawingContextType {
   changeCurrentStroke: (stroke: Stroke | null) => void;
   changeStrokes: (strokes: Stroke[]) => void;
   clearCanvas: VoidFunction;
-  canvasRef: RefObject<HTMLCanvasElement | null>
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  changeSizes: ({width, height}: { width?: number; height?: number }) => void
 }
 
 export const DrawingContext = createContext<DrawingContextType | undefined>(undefined);
@@ -37,6 +38,10 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({childr
 
   const changeStrokes = useCallback((strokes: Stroke[]) => {
     setState(prev => ({...prev, strokes}));
+  }, []);
+
+  const changeSizes = useCallback(({width, height}: { width?: number; height?: number }) => {
+    setState((prev) => ({...prev, width: width ?? prev.width, height: height ?? prev.height}));
   }, [])
 
 
@@ -63,6 +68,7 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({childr
     changeCurrentStroke,
     clearCanvas,
     canvasRef,
+    changeSizes,
   };
 
   return (

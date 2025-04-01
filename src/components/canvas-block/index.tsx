@@ -1,13 +1,14 @@
 import React, {useCallback, useEffect, useRef} from "react";
 import {useDrawing} from "../../hooks/use-drawing.tsx";
 import {Stroke} from "../contexts/canvas-context/types.ts";
+import styles from './styles.module.css'
 
 
 const CANVAS_BG = 'white'
 
 export const CanvasBlock = () => {
   const {
-    state: {isDrawing, brushColor, brushSize, currentStroke, strokes},
+    state: {isDrawing, brushColor, brushSize, currentStroke, strokes, width, height},
     canvasRef,
     setDrawing,
     changeStrokes,
@@ -136,14 +137,16 @@ export const CanvasBlock = () => {
   }, [renderCanvas, strokes, currentStroke]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={800}
-      height={600}
-      onMouseDown={startDrawing}
-      onMouseMove={draw}
-      onMouseUp={endDrawing}
-      style={{boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', cursor: "crosshair"}}
-    />
+    <div className={styles.wrapper}>
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={endDrawing}
+        style={{boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', cursor: "crosshair"}}
+      />
+    </div>
   );
 };

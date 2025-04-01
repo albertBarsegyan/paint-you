@@ -6,6 +6,7 @@ import {downloadFile} from "../../utils/file.ts";
 const defaultFileType = 'png'
 
 export function InteractionsBlock() {
+  const {state: {width, height}, changeSizes} = useDrawing()
   const [fileType, setFileType] = useState(defaultFileType)
   const {setColor, canvasRef, state: {brushColor, brushSize}, setSize, clearCanvas} = useDrawing()
 
@@ -19,6 +20,24 @@ export function InteractionsBlock() {
 
   return (
     <div className={styles.wrapper}>
+      <div>
+        <label className={styles.label}>
+          Width (px):
+          <input
+            className={styles.inputColor}
+            value={width}
+            onChange={e => changeSizes({width: Number(e.target.value)})} type='number'/>
+        </label>
+
+        <label className={styles.label}>
+          Height (px):
+          <input
+            className={styles.inputColor}
+            value={height}
+            onChange={e => changeSizes({height: Number(e.target.value)})} type='number'/>
+        </label>
+      </div>
+
       <label className={styles.label}>
         Color:
         <input

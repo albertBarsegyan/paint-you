@@ -15,6 +15,8 @@ export interface DrawingState {
   brushSize: number;
   currentStroke: Stroke | null
   strokes: Stroke[]
+  width:number,
+  height:number
 }
 
 export const initialDrawingState: DrawingState = {
@@ -23,4 +25,6 @@ export const initialDrawingState: DrawingState = {
   brushSize: 5,
   currentStroke: null,
   strokes: [],
+  width:400,
+  height:400,
 };

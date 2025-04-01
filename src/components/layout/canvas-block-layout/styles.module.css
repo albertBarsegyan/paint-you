@@ -7,3 +7,11 @@
     justify-content: flex-start;
     align-items: flex-start;
 }
+
+@media (max-width: 768px) {
+    .wrapper {
+        flex-direction: column; /* Stack elements vertically on small screens */
+        align-items: center; /* Center elements on mobile */
+        gap: 16px; /* Reduce spacing for smaller screens */
+    }
+}

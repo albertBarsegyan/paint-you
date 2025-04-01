@@ -4,3 +4,7 @@
     border: 1px solid black;
     background: white;
 }
+
+.wrapper {
+    min-width: 400px;
+}
