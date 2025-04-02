@@ -1,4 +1,7 @@
-export const throttle = <T extends (...args: any[]) => void>(func: T, limit: number): T => {
+export const throttle = <T extends (...args: any[]) => void>(
+  func: T,
+  limit: number,
+): T => {
   let lastCall = 0;
   return ((...args: Parameters<T>) => {
     const now = Date.now();

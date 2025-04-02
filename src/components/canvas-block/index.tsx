@@ -1,96 +1,97 @@
-import React, {useCallback, useEffect, useRef} from "react";
-import {useDrawing} from "../../hooks/use-drawing.tsx";
-import {Stroke} from "../contexts/canvas-context/types.ts";
-import styles from './styles.module.css'
+import React, { useCallback, useEffect, useRef } from "react";
 
+import { useDrawing } from "../../hooks/use-drawing.tsx";
+import { drawStrokeUtil, getTouchPos } from "../../utils/canvas.ts";
+import styles from "./styles.module.css";
 
-const CANVAS_BG = 'white'
+const CANVAS_BG = "white";
 
-export const CanvasBlock = () => {
+const CanvasBlock = () => {
   const {
-    state: {isDrawing, brushColor, brushSize, currentStroke, strokes, width, height},
+    state: {
+      isDrawing,
+      brushColor,
+      brushSize,
+      currentStroke,
+      strokes,
+      width,
+      height,
+    },
     canvasRef,
     setDrawing,
     changeStrokes,
-    changeCurrentStroke
+    changeCurrentStroke,
   } = useDrawing();
 
   const drawingRef = useRef(isDrawing);
   const currentStrokeRef = useRef(currentStroke);
-  const brushPropsRef = useRef({color: brushColor, size: brushSize});
+  const brushPropsRef = useRef({ color: brushColor, size: brushSize });
 
   useEffect(() => {
     drawingRef.current = isDrawing;
     currentStrokeRef.current = currentStroke;
-    brushPropsRef.current = {color: brushColor, size: brushSize};
+    brushPropsRef.current = { color: brushColor, size: brushSize };
   }, [isDrawing, currentStroke, brushColor, brushSize]);
 
   const animationFrameRef = useRef<number | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current || !currentStrokeRef.current) return;
+  const draw = useCallback(
+    (x: number, y: number) => {
+      if (!drawingRef.current || !currentStrokeRef.current) return;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      if (
+        lastPointRef.current &&
+        Math.abs(lastPointRef.current.x - x) < 2 &&
+        Math.abs(lastPointRef.current.y - y) < 2
+      ) {
+        return;
+      }
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      lastPointRef.current = { x, y };
 
-    if (lastPointRef.current &&
-      Math.abs(lastPointRef.current.x - x) < 2 &&
-      Math.abs(lastPointRef.current.y - y) < 2) {
-      return;
-    }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
 
-    lastPointRef.current = {x, y};
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    animationFrameRef.current = requestAnimationFrame(() => {
-      changeCurrentStroke({
-        ...currentStrokeRef.current!,
-        points: [...currentStrokeRef.current!.points, {x, y}],
+      animationFrameRef.current = requestAnimationFrame(() => {
+        changeCurrentStroke({
+          ...currentStrokeRef.current!,
+          points: [...currentStrokeRef.current!.points, { x, y }],
+        });
       });
-    });
-  }, [changeCurrentStroke, canvasRef]);
+    },
+    [changeCurrentStroke],
+  );
 
-  const drawStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
-    if (stroke.points.length === 0) return;
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    draw(
+      e.clientX - e.currentTarget.getBoundingClientRect().left,
+      e.clientY - e.currentTarget.getBoundingClientRect().top,
+    );
+  };
 
-    ctx.strokeStyle = stroke.color;
-    ctx.lineWidth = stroke.size;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+  const drawStroke = useCallback(drawStrokeUtil, []);
 
-    for (let i = 1; i < stroke.points.length; i++) {
-      ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-    }
+  const startDrawing = useCallback(
+    (x: number, y: number) => {
+      changeCurrentStroke({
+        points: [{ x, y }],
+        color: brushPropsRef.current.color,
+        size: brushPropsRef.current.size,
+      });
+      setDrawing(true);
+      lastPointRef.current = { x, y };
+    },
+    [changeCurrentStroke, setDrawing],
+  );
 
-    ctx.stroke();
-  }, []);
-
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    changeCurrentStroke({
-      points: [{x, y}],
-      color: brushPropsRef.current.color,
-      size: brushPropsRef.current.size,
-    });
-
-    setDrawing(true);
-    lastPointRef.current = {x, y};
-  }, [changeCurrentStroke, setDrawing, canvasRef]);
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    startDrawing(
+      e.clientX - e.currentTarget.getBoundingClientRect().left,
+      e.clientY - e.currentTarget.getBoundingClientRect().top,
+    );
+  };
 
   const endDrawing = useCallback(() => {
     if (animationFrameRef.current) {
@@ -110,7 +111,7 @@ export const CanvasBlock = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     ctx.fillStyle = CANVAS_BG;
@@ -125,9 +126,28 @@ export const CanvasBlock = () => {
     }
   }, [canvasRef, drawStroke, strokes]);
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const touch = e.touches[0];
+    const pos = getTouchPos(canvas, touch);
+    startDrawing(pos.x, pos.y);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const touch = e.touches[0];
+    const pos = getTouchPos(canvas, touch);
+    draw(pos.x, pos.y);
+  };
+
   useEffect(() => {
     return () => {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      if (animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
     };
   }, []);
 
@@ -142,11 +162,19 @@ export const CanvasBlock = () => {
         ref={canvasRef}
         width={width}
         height={height}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
         onMouseUp={endDrawing}
-        style={{boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', cursor: "crosshair"}}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={endDrawing}
+        style={{
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          cursor: "crosshair",
+        }}
       />
     </div>
   );
 };
+
+export default CanvasBlock;
