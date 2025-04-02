@@ -1,6 +1,6 @@
-import styles from './styles.module.css';
+import styles from "./styles.module.css";
 
-export function HeaderSection() {
+export default function HeaderSection() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>

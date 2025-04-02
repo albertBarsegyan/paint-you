@@ -1,22 +1,45 @@
-import {useDrawing} from "../../hooks/use-drawing.tsx";
-import styles from './styles.module.css';
-import {useState} from "react";
-import {downloadFile} from "../../utils/file.ts";
+import { ChangeEvent, useState } from "react";
 
-const defaultFileType = 'png'
+import { useDrawing } from "../../hooks/use-drawing.tsx";
+import { downloadFile } from "../../utils/file.ts";
+import styles from "./styles.module.css";
+import { paperSizeValidator } from "./utils.ts";
 
-export function InteractionsBlock() {
-  const {state: {width, height}, changeSizes} = useDrawing()
-  const [fileType, setFileType] = useState(defaultFileType)
-  const {setColor, canvasRef, state: {brushColor, brushSize}, setSize, clearCanvas} = useDrawing()
+const DEFAULT_FILE_TYPE = "png";
+
+export default function InteractionsBlock() {
+  const {
+    state: { width, height },
+    changeSizes,
+  } = useDrawing();
+  const [fileType, setFileType] = useState(DEFAULT_FILE_TYPE);
+  const {
+    setColor,
+    canvasRef,
+    state: { brushColor, brushSize },
+    setSize,
+    clearCanvas,
+  } = useDrawing();
 
   const downloadCanvas = () => {
-    if (!canvasRef.current) return
+    if (!canvasRef.current) return;
 
-    const canvas = canvasRef.current
+    const canvas = canvasRef.current;
 
-    downloadFile({canvas, fileType})
-  }
+    downloadFile({ canvas, fileType });
+  };
+
+  const onNumericChange =
+    (type: "height" | "width") => (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      const validValue = paperSizeValidator(value);
+
+      if (validValue !== null) {
+        changeSizes({ [type]: validValue });
+      } else if (value === "") {
+        changeSizes({ [type]: 0 });
+      }
+    };
 
   return (
     <div className={styles.wrapper}>
@@ -26,7 +49,9 @@ export function InteractionsBlock() {
           <input
             className={styles.inputColor}
             value={width}
-            onChange={e => changeSizes({width: Number(e.target.value)})} type='number'/>
+            pattern={"[0-9]*"}
+            onChange={onNumericChange("width")}
+          />
         </label>
 
         <label className={styles.label}>
@@ -34,7 +59,9 @@ export function InteractionsBlock() {
           <input
             className={styles.inputColor}
             value={height}
-            onChange={e => changeSizes({height: Number(e.target.value)})} type='number'/>
+            pattern={"[0-9]*"}
+            onChange={onNumericChange("height")}
+          />
         </label>
       </div>
 
@@ -43,7 +70,7 @@ export function InteractionsBlock() {
         <input
           type="color"
           value={brushColor}
-          className={styles.inputColor}
+          className={styles.colorBlock}
           onChange={(e) => setColor(e.target.value)}
         />
       </label>
@@ -60,15 +87,17 @@ export function InteractionsBlock() {
           />
 
           <span className={styles.brushSizeValue}>{brushSize}PX</span>
-
         </div>
       </label>
-
 
       <div className={styles.buttonWrapper}>
         <div>
           <div className={styles.fileTypeSelector}>
-            <select value={fileType} onChange={(e) => setFileType(e.target.value)} className={styles.fileTypeDropdown}>
+            <select
+              value={fileType}
+              onChange={(e) => setFileType(e.target.value)}
+              className={styles.fileTypeDropdown}
+            >
               <option value="png">PNG</option>
               <option value="jpg">JPG</option>
               <option value="svg">SVG</option>

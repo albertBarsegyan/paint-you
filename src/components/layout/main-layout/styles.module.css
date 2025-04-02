@@ -10,4 +10,24 @@
     width: 100%;
     padding: 32px;
     gap: 16px;
+    filter: blur(10px);
+    opacity: 0;
+    animation: blurIn 0.5s ease-out forwards;
+    -webkit-animation: blurIn 0.5s ease-out forwards;
+}
+
+
+@keyframes blurIn {
+    to {
+        filter: blur(0);
+        -webkit-filter: blur(0);
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes blurIn {
+    to {
+        -webkit-filter: blur(0);
+        opacity: 1;
+    }
 }
